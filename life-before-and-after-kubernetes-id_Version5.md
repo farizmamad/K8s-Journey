@@ -1,41 +1,27 @@
-# Life Before and After Kubernetes: Pengalaman (Nggak) Sakti Deploy Aplikasi 🚀
+# Life Before and After Kubernetes: Pengalaman (Nggak) Sakti Deploy Aplikasi
 
-**Penulis:** Kami, engineer yang juga masih suka pusing  
-**Untuk:** Teman-teman yang penasaran, "Sebahagia apa sih hidup dengan Kubernetes?"
-
----
-
-## 📋 Executive Summary
-
-**Untuk Para Stakeholder & Decision Makers:**
-
+## Executive Summary
 Artikel ini membandingkan dua pendekatan deployment aplikasi: manual vs Kubernetes. Dari sisi bisnis, Kubernetes memberikan:
 - **Efisiensi Operasional**: Otomatisasi yang mengurangi manual work secara signifikan
 - **Reliability**: Self-healing dan zero-downtime deployment
 - **Scalability**: Auto-scaling sesuai demand traffic
-- **Cost Optimization**: Resource allocation yang lebih efisien
+- **Cost Optimization**: alokasi sumber daya yang lebih efisien
 - **Developer Productivity**: Tim fokus ke development, bukan ops
 
-**Learning Journey**: Saya belajar Kubernetes selama 3 bulan terakhir, dan sekarang bisa merasakan perbedaan signifikan dalam cara deploy aplikasi.
+Di sini saya akan berbagi **Learning Journey** saya belajar Kubernetes selama 4 bulan terakhir. Untuk kalian yang baru mulai bekerja dengan Kubernetes, artikel ini dirancang khusus sebagai panduan hands-on dengan command yang bisa langsung kalian jalankan. Buat yang sudah berpengalaman, ada perbandingan arsitektur dan best practices yang mungkin menarik. Dan untuk para expert, ada insight operasional yang bisa jadi referensi.
 
-Untuk kalian yang baru mulai journey di dunia engineering, artikel ini dirancang khusus sebagai panduan hands-on dengan command yang bisa langsung kalian jalankan. Buat yang sudah pengalaman, ada perbandingan arsitektur dan best practices yang mungkin menarik. Dan untuk para expert, ada insight operasional yang bisa jadi referensi.
+_Kubernetes itu seperti memiliki chef profesional di dapur saya—awalnya perlu waktu untuk belajar cara kerja sama dengannya, tapi setelah itu, masak jadi lebih terorganisir dan hasil masakannya konsisten. Bukan cuma soal teknologi, tapi tentang mengubah cara saya mengelola "dapur" infrastruktur._
 
-**Bottom Line**: Kubernetes itu seperti memiliki chef profesional di dapur saya—awalnya perlu waktu untuk belajar cara kerja sama dengannya, tapi setelah itu, masak jadi lebih terorganisir dan hasil masakannya konsisten. Bukan cuma soal teknologi, tapi tentang mengubah cara saya mengelola "dapur" infrastruktur.
+## Hola, Teman-Teman!
 
----
-
-## Halo, Teman-Teman!
-
-Jujur aja, dulu kami mikir, "Deploy aplikasi? Ya tinggal SSH ke server, copy file, terus jalanin, kan?"  
-Tapi makin ke sini, hidup nggak sesimpel itu. Apalagi pas aplikasi mulai rame, traffic naik, tiba-tiba harus scaling, atau—yang paling nyebelin—servernya crash tengah malam.  
-Nah, di artikel ini, kami mau cerita pengalaman kami coba dua cara: **manual (ala jadul)** dan **pakai Kubernetes (ala sultan automation)**.  
-Setelah menggunakan Kubernetes selama beberapa bulan, saya akhirnya paham kenapa para DevOps engineer begitu excited dengan teknologi ini! Jadi, yuk ikuti step-by-step tutorial ini dan rasakan sendiri perbedaannya. Setiap langkah sudah saya coba dan pastikan bisa dijalankan dengan mudah. 😊
-
----
+Jujur aja, dulu saya mikir, "Deploy aplikasi? Ya tinggal SSH ke server, copy file, terus jalanin, kan?"  
+Tapi makin ke sini, hidup nggak sesimpel itu. Apalagi pas aplikasi mulai rame, traffic naik, tiba-tiba harus scaling, atau—yang paling nyebelin—servernya crash tengah malam.
+Nah, di artikel ini, saya mau cerita pengalaman setelah mencoba dua cara: **manual (ala jadul)** dan **pakai Kubernetes**.  
+Setelah menggunakan Kubernetes selama beberapa bulan, saya akhirnya paham kenapa teknologi ini begitu menarik! Jadi, yuk ikuti step-by-step tutorial ini dan rasakan sendiri perbedaannya.
 
 ## Bagian 1: Hidup Manual, Rasanya Kayak LDR Jarak Jauh
 
-### 1️⃣ Siapkan Aplikasi:  
+### 1. Siapkan Aplikasi:  
 Bayangin kita masak mie instan. Bahannya?  
 - Satu file Go sederhana:  
 
@@ -67,22 +53,18 @@ Masak dulu di dapur lokal:
 go build -o myapp app.go
 ```
 
----
-
-### 2️⃣ Bikin VM:  
+### 2. Bikin VM:  
 Kayak nyari kontrakan, kita pilih salah satu tempat tinggal.  
 Contohnya di Google Cloud (GCP).  
 
-> 💡 **VM (Virtual Machine)**: Komputer virtual di cloud. Bayangkan seperti menyewa kamar kosan di internet—dapat komputer utuh tapi virtual, complete dengan OS, CPU, RAM, storage.
+> **VM (Virtual Machine)**: Komputer virtual di cloud. Bayangkan seperti menyewa kamar kosan di internet—dapat komputer utuh tapi virtual, complete dengan OS, CPU, RAM, storage.
 
 - Buka GCP, bikin VM (Ubuntu 22.04, e2-micro, allow HTTP), tunggu alamat rumah (IP) keluar.
 
----
-
-### 3️⃣ Belanja Bumbu:  
+### 3. Belanja Bumbu:  
 SSH ke VM (kontrakan baru kita):  
 
-> 💡 **SSH (Secure Shell)**: Cara remote login ke server/VM via terminal. Seperti nelpon ke kontrakan, tapi bisa langsung ngatur-ngatur barang di sana.
+> **SSH (Secure Shell)**: Cara remote login ke server/VM via terminal. Seperti nelpon ke kontrakan, tapi bisa langsung ngatur-ngatur barang di sana.
 
 ```bash
 gcloud compute ssh <NAMA-VM> --zone=<ZONE>
@@ -90,17 +72,13 @@ sudo apt update
 sudo apt install -y golang nginx
 ```
 
----
-
-### 4️⃣ Kirim Makanan ke Kontrakan:  
+### 4. Kirim Makanan ke Kontrakan:  
 Dari rumah (laptop), kita lempar mie instan (biner):  
 ```bash
 scp -i ~/.ssh/google_compute_engine myapp <username>@<EXTERNAL_IP_VM>:/home/<username>/
 ```
 
----
-
-### 5️⃣ Masak & Sajikan:  
+### 5. Masak & Sajikan:  
 Di VM, kita masak dua porsi sekaligus:  
 ```bash
 PORT=8081 nohup ./myapp > app1.log 2>&1 &
@@ -112,12 +90,10 @@ curl http://localhost:8081
 curl http://localhost:8082
 ```
 
----
-
-### 6️⃣ Bagi-Bagi ke Teman Lewat Nginx (Load Balancer Manual):  
+### 6. Bagi-Bagi ke Teman Lewat Nginx (Load Balancer Manual):  
 Kita set Nginx biar kalau ada tamu, bisa pilih porsi mana aja.  
 
-> 💡 **Load Balancer**: Seperti satpam yang ngarahin tamu ke lift mana yang kosong. Traffic dibagi-bagi ke beberapa server biar nggak ada yang overload.
+> **Load Balancer**: Seperti satpam yang ngarahin tamu ke lift mana yang kosong. Traffic dibagi-bagi ke beberapa server biar nggak ada yang overload.
 
 ```nginx
 upstream myapp_backend {
@@ -134,7 +110,7 @@ server {
 ```
 
 ```
-📊 Traffic Flow Diagram:
+Traffic Flow Diagram:
 Internet → [Nginx Load Balancer] → App Instance 1 (Port 8081)
                  ↓                → App Instance 2 (Port 8082)
                  ↓                → App Instance 3 (Port 8083)
@@ -149,9 +125,7 @@ sudo systemctl restart nginx
 Tamu tinggal datang ke:  
 http://<EXTERNAL_IP_VM>
 
----
-
-### 7️⃣ Drama Dimulai: Scaling, Upgrade, Crash, Config (Hands-on!)
+### 7. Drama Dimulai: Scaling, Upgrade, Crash, Config (Hands-on!)
 
 #### **A. Scaling (Tambah Porsi Manual)**
 Misal, tiba-tiba harus tambah instance karena ada promo!
@@ -175,11 +149,9 @@ sudo systemctl restart nginx
 **Cek:**  
 Akses berulang ke http://<EXTERNAL_IP_VM> dan lihat hostname berbeda-beda.
 
----
-
 #### **B. Simulasi Crash (Bakar Dapur Satu Panci)**
 
-> 😰 **Cerita dari Lapangan**: Dulu kami pernah kena ini tengah malam. Aplikasi e-commerce tiba-tiba down satu instance, dan yang tersisa cuma bisa handle setengah traffic. WhatsApp tim langsung rame, semua bangun, SSH bergantian, dan akhirnya butuh 15 menit buat recovery. 15 menit itu terasa seperti 15 tahun! 
+> **Cerita dari pengalaman**: Ada rekan saya pernah kena masalah aplikasi down di akhir pekan. Aplikasi tiba-tiba down satu instance, dan yang tersisa cuma bisa handle setengah traffic. WhatsApp tim langsung rame, semua bangun, SSH bergantian, dan akhirnya butuh 15 menit buat recovery. Terasa lebay, tapi 15 menit itu terasa seperti 15 tahun!
 
 Matikan satu aplikasi:
 ```bash
@@ -195,13 +167,9 @@ Harus jalankan ulang manual:
 PORT=8081 nohup ./myapp > app1.log 2>&1 &
 ```
 
-> 💭 **Reflection**: Waktu itu kami merasa seperti dokter yang harus operate tengah malam tanpa assistennya. Stress level maksimal, apalagi kalau crash-nya pas weekend atau liburan.
-
----
+> **Refleksi**: Waktu itu saya merasa seperti dokter yang lagi cuti tapi harus operate tanpa assistennya. Stres level maksimal.
 
 #### **C. Upgrade (Ganti Resep Manual)**
-
-> 📖 **Personal Story**: Upgrade paling memorable kami adalah saat harus deploy hotfix di aplikasi banking jam 2 pagi. Koordinasi dengan 5 orang via call, satu-satu matiin instance, deploy, test, nyalain lagi. Total downtime 8 menit. Setelah itu, kita semua sepakat: "Harus ada cara yang lebih baik!"
 
 Misal, ingin ubah pesan jadi "Halo Dunia!"
 
@@ -228,9 +196,7 @@ Misal, ingin ubah pesan jadi "Halo Dunia!"
     curl http://localhost:8081
     ```
 
-> 💭 **Reflection**: Setiap upgrade manual itu seperti berjalan di tali tambang tanpa safety net. Satu salah langkah, bisa jadi outage yang parah.
-
----
+> **Refleksi**: Setiap upgrade manual itu seperti berjalan di tali tambang tanpa safety net. Satu salah langkah, bisa jadi outage yang parah.
 
 #### **D. Config & Secret (Cara Manual dan Berisiko)**
 1. Tambah file `.env`:
@@ -250,32 +216,27 @@ Misal, ingin ubah pesan jadi "Halo Dunia!"
 Kalau file .env ke-upload ke GitHub, rahasia bocor!  
 Kalau lupa set ENV, greeting jadi kosong.
 
----
-
-### Curhat:
-Rasanya?  
+### Jadi mau curhat: Bagaimana Rasanya pakai cara manual?  
 - Capek! Banyak kerjaan yang sama, gampang lupa.
-- Kalau pelanggan (traffic) tiba-tiba rame, bisa-bisa dapur kebakaran.
+- Kalau pelanggan tiba-tiba rame, bisa-bisa dapur kebakaran.
 - Semua harus dipegang sendiri.  
 - Tapi... buat belajar dasar, seru juga! Mirip belajar masak dari awal.
 
-> 💭 **Emotional Reflection**: Waktu itu kami merasa seperti chef tunggal di restoran yang tiba-tiba kedatangan bus pariwisata. Panik, kewalahan, tapi juga merasa accomplished setelah berhasil survive. Ada rasa puas setelah berhasil handle manual deployment, tapi juga aware bahwa ini bukan sustainable solution untuk jangka panjang.
+> **Refleksi Emosional**: Waktu itu saya merasa seperti chef tunggal di restoran yang tiba-tiba kedatangan bus pariwisata. Panik, kewalahan, tapi juga merasa accomplished setelah berhasil survive. Ada rasa puas setelah berhasil handle manual deployment, tapi juga aware bahwa ini bukan solusi untuk jangka panjang.
 
-**🤝 Your Turn**: Pernah ngalamin deployment nightmare? Share dong di comments:
+**Giliran anda**: Apa anda pernah ngalamin deployment nightmare? Share dong di comments:
 - Jam berapa deployment paling mengerikan yang pernah kalian handle?
 - Apa error paling aneh yang pernah kalian temui saat manual deployment?
 - Tips and tricks kalian untuk survive di era manual deployment?
 
-Kami penasaran sama cerita-cerita kalian! Maybe kita bisa saling belajar dari pengalaman masing-masing. 😊
-
----
+Saya penasaran sama cerita-cerita kalian! Maybe kita bisa saling belajar dari pengalaman masing-masing. 😊
 
 ## Bagian 2: Hidup Modern—Kubernetes, Serasa Punya Dapur Otomatis!
 
-### 1️⃣ Masak Sekali, Bisa Dimakan di Mana Saja (Dockerize)  
+### 1. Masak Sekali, Bisa Dimakan di Mana Saja (Dockerize)  
 Biar nggak perlu install ulang bumbu tiap pindah dapur.
 
-> 💡 **Docker**: Containerization technology. Bayangkan seperti kotak bekal yang sudah include semua—makanan, bumbu, bahkan sendok garpu. Dimana pun dibuka, rasanya sama. Aplikasi di-package dengan semua dependencies-nya.
+> **Docker**: Containerization technology. Bayangkan seperti kotak bekal yang sudah include semua—makanan, bumbu, bahkan sendok garpu. Dimana pun dibuka, rasanya sama. Aplikasi di-package dengan semua dependencies-nya.
 
 ```dockerfile
 FROM golang:1.22-alpine AS build
@@ -297,21 +258,17 @@ docker login
 docker push <dockerhub-username>/myapp:v1
 ```
 
----
+### 2. Punya Dapur Sendiri (Minikube)
 
-### 2️⃣ Punya Dapur Sendiri (Minikube)
-
-> 💡 **Minikube**: Kubernetes cluster lokal untuk development. Seperti practice kitchen di culinary school—semua tools ada, tapi skala kecil buat belajar.
+> **Minikube**: Kubernetes cluster lokal untuk development. Seperti practice kitchen di culinary school—semua tools ada, tapi skala kecil buat belajar.
 
 ```bash
 minikube start
 ```
 
----
+### 3. Kasih Resep ke Robot Dapur (Kubernetes YAML)
 
-### 3️⃣ Kasih Resep ke Robot Dapur (Kubernetes YAML)
-
-> 💡 **Deployment**: Blueprint untuk menjalankan aplikasi. **Service**: Traffic router internal cluster. **Pod**: Unit terkecil di K8s, bisa contain satu atau lebih container.
+> **Deployment**: Blueprint untuk menjalankan aplikasi. **Service**: Traffic router internal cluster. **Pod**: Unit terkecil di K8s, bisa contain satu atau lebih container.
 
 ```yaml
 apiVersion: apps/v1
@@ -374,9 +331,7 @@ kubectl get service
 minikube service myapp-svc --url
 ```
 
----
-
-### 4️⃣ Drama Dimulai: Scaling, Upgrade, Crash, Secret (Hands-on ala K8s)
+### 4. Drama Dimulai: Scaling, Upgrade, Crash, Secret (Hands-on ala K8s)
 
 #### **A. Scaling Otomatis**
 ```bash
@@ -389,11 +344,9 @@ curl $(minikube ip):30080
 ```
 Tiap request bisa dapat instance berbeda!
 
----
-
 #### **B. Crash Test (Bakar 1 Pod)**
 
-> 🎯 **Personal Story**: Pertama kali lihat K8s self-healing ini, kami speechless. "Seriously? Segini doang?" Dulu butuh bangun tengah malam, sekarang tinggal tidur nyenyak. Game changer banget!
+> 🎯 **Cerita Pribadi**: Pertama kali lihat K8s self-healing ini, saya speechless. "Seriously bisa otomatis begini?" Dulu butuh bangun tengah malam, sekarang tinggal tidur nyenyak. Game changer banget!
 
 Matikan satu pod:
 ```bash
@@ -419,9 +372,7 @@ After:   [Pod-1] [Pod-4] [Pod-3] ← New pod created automatically
          Status: Running ✅
 ```
 
-> 💭 **Reflection**: Waktu itu kami merasa seperti punya security guard yang nggak pernah tidur. Ada yang hilang, langsung diganti. Peace of mind level maksimal!
-
----
+> Waktu itu saya merasa seperti punya security guard yang nggak pernah tidur. Ada yang hilang, langsung diganti. Peace of mind level maksimal!
 
 #### **C. Upgrade (Rolling Update Otomatis)**
 1. Edit app.go, build & push image baru (misal `v2`):
@@ -447,8 +398,6 @@ After:   [Pod-1] [Pod-4] [Pod-3] ← New pod created automatically
     ```bash
     curl $(minikube ip):30080
     ```
-
----
 
 #### **D. Config & Secret (Aman dan Terkontrol)**
 
@@ -496,9 +445,7 @@ After:   [Pod-1] [Pod-4] [Pod-3] ← New pod created automatically
     kubectl exec -it <nama-pod> -- printenv | grep API_KEY
     ```
 
----
-
-### 5️⃣ Cek Dapur, Nonton CCTV (Monitoring)
+### 5. Cek Dapur, Nonton CCTV (Monitoring)
 
 ```bash
 kubectl get pods
@@ -507,29 +454,22 @@ kubectl logs <nama-pod>
 Bisa juga pasang Prometheus, Grafana, atau tools lain.  
 Kalau mau pindah dapur (cloud lain), cukup bawa file YAML-nya.
 
----
-
-### Ngobrol-ngobrol:  
-Rasanya?  
+### Mau curhat lagi: Bagaimana rasanya setelah menggunakan Kubernetes?  
 - Hidup jadi lebih tenang, scaling tanpa drama.
 - Kalau dapur rame, robot langsung tambah chef.
 - Belajar Kubernetes memang butuh waktu, tapi setelah ngerti, serasa punya kru MasterChef pribadi.
-- Tapi ya, buat masak mie instan doang, bawa seluruh robot ini kadang overkill juga... 😂
+- Tapi ya, buat masak mie instan doang, bawa seluruh robot ini kadang overkill juga...
 
-> 💭 **Emotional Reflection**: Transisi ke Kubernetes itu seperti belajar naik sepeda. Awalnya jatuh-bangun, pusing sama YAML, error di sana-sini. Tapi setelah "click", rasanya seperti punya superpower. Kami ingat momen pertama kali rolling update sukses tanpa downtime—literally melompat kegirangan di kantor!
+> **Refleksi Emosional**: Transisi ke Kubernetes itu seperti belajar naik sepeda. Awalnya jatuh-bangun, pusing sama YAML, error di sana-sini. Tapi setelah "click", rasanya seperti punya superpower. Saya ingat momen pertama kali rolling update sukses tanpa downtime—literally melompat kegirangan di kantor!
 
-**🤝 Kubernetes Journey Check**: 
-- Apakah kalian juga pernah struggle dengan YAML indentation? 😅
+** Kubernetes Journey Check**: 
+- Apakah kalian juga pernah struggle dengan YAML indentation?
 - Apa fitur K8s yang paling bikin kalian "wow" pertama kali?
 - Share dong momen "aha!" kalian saat belajar Kubernetes!
 
-Let's learn together! Kubernetes community itu sangat supportive, jadi jangan ragu untuk sharing dan bertanya. 🚀
+Let's learn together! Kubernetes community itu sangat supportive, jadi jangan ragu untuk sharing dan bertanya.
 
----
-
----
-
-## 🚨 Troubleshooting FAQ: "Help, Something Broke!"
+## Troubleshooting FAQ: "Help, Something Broke!"
 
 **Manual Deployment Issues:**
 
@@ -617,8 +557,6 @@ docker pull <your-image>:<tag>
 - `minikube dashboard` gives you a nice GUI for debugging
 - When in doubt, delete and recreate the resource (K8s best practice!)
 
----
-
 ## Kesimpulan Ngopi
 
 | Aspek         | Manual (Tradisional)           | Kubernetes (Modern)         |
@@ -631,8 +569,6 @@ docker pull <your-image>:<tag>
 | Monitoring    | Cek log/process manual        | kubectl logs/status, add-on |
 | Portability   | Tiap VM beda-beda             | Bisa di mana saja           |
 
----
-
 ## Kapan Pakai Manual, Kapan Pakai Kubernetes?
 
 - **Manual:**  
@@ -643,9 +579,7 @@ docker pull <your-image>:<tag>
   Kalau aplikasi makin rame, butuh scaling, nggak mau mati gaya pas traffic naik, atau pengen automation.  
   Serasa punya dapur profesional—semua bisa jalan otomatis, kita tinggal atur resepnya.
 
----
-
-## 📚 Mini-Glossary: Kubernetes Terms Decoded
+## Mini-Glossary: Kubernetes Terms Decoded
 
 **Pod**: Unit terkecil di K8s. Satu pod = satu atau lebih container yang share network & storage. Analogi: satu kamar kosan yang bisa isi 1-2 orang.
 
@@ -669,9 +603,7 @@ docker pull <your-image>:<tag>
 
 **Minikube**: Kubernetes cluster lokal untuk development. Analogi: practice kitchen di culinary school.
 
----
-
-## 🎯 Resources untuk Learning Journey Kalian
+## Resources untuk Learning Journey Kalian
 
 **Official Documentation:**
 - [Kubernetes Official Docs](https://kubernetes.io/docs/) - Comprehensive tapi kadang overwhelming
@@ -707,46 +639,42 @@ docker pull <your-image>:<tag>
 - [Kubernetes the Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) - Setup K8s from scratch (advanced)
 - [100 Days of Kubernetes](https://100daysofkubernetes.io/) - Structured learning path
 
----
+## Penutup: Your Journey Starts Here!
 
-## Penutup: Your Journey Starts Here! 🚀
-
-Setelah ngoprek dua dunia ini, kami sadar:  
+Setelah ngoprek dua dunia ini, saya sadar:  
 Kubernetes itu keren, tapi bukan buat semua masalah.  
 Mulai dari yang manual dulu, biar paham rasa capeknya—baru nanti saat butuh, pindah ke Kubernetes bakal lebih terasa nikmatnya.
 
-> 💭 **Final Reflection**: Perjalanan dari manual deployment ke Kubernetes itu seperti evolusi dari sepeda onthel ke mobil Tesla. Keduanya punya tempat dan waktu yang tepat. Yang penting adalah terus belajar, experimenting, dan nggak takut untuk trial-error.
+> **Final Refleksi**: Perjalanan dari manual deployment ke Kubernetes itu seperti evolusi dari sepeda onthel ke mobil Tesla. Keduanya punya tempat dan waktu yang tepat. Yang penting adalah terus belajar, experimenting, dan nggak takut untuk trial-error.
 
-**✨ Remember This:**
+** Remember This:**
 - **Every expert was once a beginner** - Jangan minder kalau masih bingung sama YAML atau kubectl commands
 - **Failure is part of learning** - Setiap pod yang crash, setiap error message, itu semua teachers terbaik
 - **Community is your superpower** - Kubernetes community globally sangat welcoming dan helpful
 - **Progress over perfection** - Mulai dari yang simple, nggak perlu langsung setup production-grade cluster
 
-**🎯 Your Next Steps:**
+** Your Next Steps:**
 1. **Start small**: Coba tutorial ini step-by-step di local machine
 2. **Join communities**: Masuk ke Slack atau Telegram groups, active bertanya
 3. **Build something real**: Deploy aplikasi pet project kalian ke K8s
 4. **Share your journey**: Write blog, bikin video, atau sekedar share di social media
 
-**🤝 Let's Keep the Conversation Going:**
-Kami penasaran banget sama journey kalian! Share di comments:
+** Let's Keep the Conversation Going:**
+Saya penasaran banget sama journey kalian! Share di comments:
 - Project pertama yang mau kalian deploy ke Kubernetes?
 - Challenge terbesar yang kalian anticipate?
 - Success story atau failure story yang pengen di-share?
 
-**🌟 Final Words:**
+** Final Words:**
 Technology will always evolve, tools will come and go, but the fundamentals of understanding systems, problem-solving, and continuous learning will always be valuable. Kubernetes is just one tool in your toolkit—powerful tool, but still just a tool.
 
 Yang paling penting: **Keep learning, keep sharing, keep building!** 
 
 The DevOps world needs more people like you—curious, willing to learn, and ready to share knowledge with others. Your unique perspective and experience matters, whether you're just starting or already experienced.
 
-**Dream big, start small, move fast. The cloud is the limit! ☁️✨**
+**Dream big, start small, move fast. The cloud is the limit! ☁️**
 
----
-
-**🙏 Acknowledgments:**
+** Acknowledgments:**
 Terima kasih untuk semua engineer yang udah share knowledge, untuk communities yang supportive, dan untuk kalian semua yang mau baca sampai akhir. This is how we grow together as a community!
 
-_Share kalau menurutmu cerita ini bermanfaat! Tag teman-teman yang mungkin butuh motivation boost untuk start their Kubernetes journey! 🚀💙_
+_Share kalau menurutmu cerita ini bermanfaat! Tag teman-teman yang mungkin butuh motivation boost untuk start their Kubernetes journey!💙_
